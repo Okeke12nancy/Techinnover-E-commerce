@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '../../module/user/entities/user.entity';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CreateAuthDto } from '../auth/dto/create-auth.dto';
 
 @Injectable()
 export class UsersService {
@@ -11,15 +11,24 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
+  async findByEmail(email: string): Promise<User | undefined> {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id } });
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find();
+  }
+
+  async createUser(createUserDto: CreateAuthDto): Promise<User> {
     const user = this.usersRepository.create(createUserDto);
     return this.usersRepository.save(user);
   }
 
-  async findByEmail(email: string): Promise<User | undefined> {
-    return this.usersRepository.findOne({ where: { email } });
-  }
-  async findById(id: string): Promise<User | null> {
-    return await this.usersRepository.findOneBy({ id });
+  async banUser(id: string): Promise<void> {
+    await this.usersRepository.update(id, { isActive: false });
   }
 }
