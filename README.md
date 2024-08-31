@@ -65,23 +65,23 @@ API Endpoints
 
 - User Management
 
-1. POST /auth/register: Register a new user.
-2. POST /auth/login: Authenticate a user and obtain a JWT token.
-3. GET /users: List all users (admin only).
-4. PATCH /users/
-5. /ban: Ban a user (admin only).
-6. PATCH /users/
-7. /unban: Unban a user (admin only).
+POST /auth/register: Register a new user.
+POST /auth/login: Authenticate a user and obtain a JWT token.
+GET /users: List all users (admin only).
+PATCH /users/
+/ban: Ban a user (admin only).
+PATCH /users/
+/unban: Unban a user (admin only).
 
 - Product Management
   POST /products: Create a new product (authenticated users).
   GET /products: List all approved products.
   GET /products/
-  : Get a product by ID.
+  Get a product by ID.
   PATCH /products/
-  : Update a product (authenticated users).
+  Update a product (authenticated users).
   DELETE /products/
-  : Delete a product (authenticated users).
+  Delete a product (authenticated users).
   PATCH /products/
   /approve: Approve a product (admin only).
   PATCH /products/
@@ -96,8 +96,10 @@ API Endpoints
 
 # or
 
+```
 yarn test
-
 ```
 
-```
+Start your NestJS server.
+Navigate to http://localhost:3000/api-docs in your browser.
+You should see the Swagger UI with the documentation for your API, including details on all available endpoints and their request/response schemas.

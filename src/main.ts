@@ -2,12 +2,24 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DataSource } from 'typeorm';
 import { getTypeOrmConfig } from './config/database.config';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = process.env.PORT || 3000;
 
   const dataSource = new DataSource(getTypeOrmConfig());
+  const config = new DocumentBuilder()
+    .setTitle('E-Commerce API')
+    .setDescription('API documentation for the E-Commerce system')
+    .setVersion('1.0')
+    .addTag('products')
+    .addTag('users')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
+
+  await app.listen(3000);
 
   try {
     await dataSource.initialize();
