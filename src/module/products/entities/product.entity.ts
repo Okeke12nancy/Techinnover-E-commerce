@@ -27,7 +27,7 @@ export class Product {
   @Column({ default: false })
   approved: boolean;
 
-  @ManyToOne(() => User, (user) => user.products)
+  @ManyToOne(() => User, (user) => user.products, { eager: true })
   @JoinColumn()
   user: User;
 }

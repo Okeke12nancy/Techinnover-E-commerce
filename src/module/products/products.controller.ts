@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Query,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 
@@ -46,7 +47,21 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @Request() req: any,
   ) {
-    return this.productsService.create(createProductDto, req.user.id);
+    const product = await this.productsService.create(
+      createProductDto,
+      req.user.id,
+    );
+
+    const response = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      description: product.description,
+      quantity: product.quantity,
+      approved: product.approved,
+    };
+
+    return response;
   }
 
   @Get()
@@ -58,10 +73,38 @@ export class ProductsController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ) {
-    return this.productsService.findAll(page, limit);
+    const pageNumber = parseInt(page as any, 10) || 1;
+    const limitNumber = parseInt(limit as any, 10) || 10;
+
+    return this.productsService.findAll(pageNumber, limitNumber);
   }
 
+  @Get('/admin')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({ summary: 'Get a list of all products' })
+  @ApiResponse({ status: 200, description: 'Successfully retrieved products' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async getAllProductsForAdmin(
+    @Request() req: any,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    return this.productsService.findAllForAdmin(page, limit);
+  }
+
+  @Get('/user')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({ summary: 'Get a list of all products' })
+  @ApiResponse({ status: 200, description: 'Successfully retrieved products' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: 'Get a product by ID' })
   @ApiParam({
@@ -93,7 +136,18 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
     @Request() req: any,
   ) {
-    return this.productsService.update(id, updateProductDto, req.user.id);
+    try {
+      return await this.productsService.update(
+        id,
+        updateProductDto,
+        req.user.id,
+      );
+    } catch (error) {
+      console.error('Error in update controller:', error);
+      throw new InternalServerErrorException(
+        'An error occurred while updating the product',
+      );
+    }
   }
 
   @Delete(':id')
@@ -113,7 +167,7 @@ export class ProductsController {
     return this.productsService.remove(id, req.user.id);
   }
 
-  @Patch(':id/approve')
+  @Patch(':id/admin/approve')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
@@ -131,7 +185,7 @@ export class ProductsController {
     return this.productsService.approve(id);
   }
 
-  @Patch(':id/disapprove')
+  @Patch(':id/admin/disapprove')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)

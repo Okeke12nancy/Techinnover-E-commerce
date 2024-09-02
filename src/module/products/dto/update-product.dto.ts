@@ -1,4 +1,3 @@
-// import { PartialType } from '@nestjs/mapped-types';
 import { CreateProductDto } from './create-product.dto';
 import { IsString, IsNumber, Min, IsOptional } from 'class-validator';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
@@ -8,18 +7,22 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
     description: 'The name of the product',
     type: String,
     example: 'Sample Product',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  name: string;
+  name?: string;
 
   @ApiProperty({
     description: 'The price of the product',
     type: Number,
     example: 99.99,
+    required: false,
   })
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  price: number;
+  price?: number;
 
   @ApiProperty({
     description: 'A description of the product',
@@ -35,8 +38,10 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
     description: 'The quantity of the product in stock',
     type: Number,
     example: 100,
+    required: false,
   })
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  quantity: number;
+  quantity?: number;
 }

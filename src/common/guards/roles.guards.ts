@@ -1,22 +1,48 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../decorators/decorators.guards';
+import { JwtAuthGuard } from '../../module/auth/auth.jwt.strategy';
 import { Role } from '../enum';
-import { User } from '../../module/user/entities/user.entity';
+import { ROLES_KEY } from '../decorators/decorators.guards';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+export class RolesGuard extends JwtAuthGuard {
+  constructor(private reflector: Reflector) {
+    super();
+  }
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
+
     if (!requiredRoles) {
+      console.log('No roles required, allowing access');
       return true;
     }
-    const { user }: { user: User } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.role?.includes(role));
+
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    if (!user) {
+      console.log('User is not authenticated, throwing ForbiddenException');
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const hasRole = requiredRoles.some((role) => user.role === role);
+
+    if (!hasRole) {
+      console.log(
+        'User does not have the required role, throwing ForbiddenException',
+      );
+      throw new ForbiddenException('Forbidden');
+    }
+
+    console.log('User has the required role, allowing access');
+    return true;
   }
 }

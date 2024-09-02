@@ -4,10 +4,11 @@ import {
   PrimaryGeneratedColumn,
   BeforeInsert,
   OneToMany,
+  Index,
 } from 'typeorm';
-import { Index } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { Product } from '../../products/entities/product.entity';
+import { Role } from '../../../common/enum';
 
 @Entity()
 export class User {
@@ -24,11 +25,11 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ default: 'user' })
-  role: string;
+  @Column({ type: 'enum', enum: Role, default: Role.User })
+  role: Role;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ default: false })
+  isBanned: boolean;
 
   @OneToMany(() => Product, (product) => product.user)
   products: Product[];

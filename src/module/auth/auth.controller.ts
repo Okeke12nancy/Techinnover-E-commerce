@@ -9,6 +9,9 @@ import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { User } from '../../module/user/entities/user.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { LoginDto } from './dto/login-dto';
+import { UserResponseDto } from '../user/dto/user-response.dto';
+import { RegisterResponseDto } from '../user/dto/register-response.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -24,28 +27,41 @@ export class AuthController {
   })
   @ApiResponse({ status: 400, description: 'Email already in use' })
   @ApiBody({ type: CreateAuthDto })
-  async register(@Body() createAuthDto: CreateAuthDto): Promise<User> {
+  async register(
+    @Body() createUserDto: CreateAuthDto,
+  ): Promise<RegisterResponseDto> {
     const existingUser = await this.authService.findByEmail(
-      createAuthDto.email,
+      createUserDto.email,
     );
     if (existingUser) {
       throw new BadRequestException('Email already in use');
     }
-    return this.authService.createUser(createAuthDto);
+
+    const user: User = await this.authService.createUser(createUserDto);
+    const userResponseDto: UserResponseDto = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isBanned: user.isBanned,
+    };
+
+    return {
+      message: 'User successfully registered',
+      user: userResponseDto,
+    };
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Log in a user' }) // Describes the operation
+  @ApiOperation({ summary: 'Log in a user' })
   @ApiResponse({
     status: 200,
     description: 'The user has been successfully logged in.',
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  @ApiBody({
-    schema: { example: { email: 'user@example.com', password: 'password123' } },
-  })
-  async login(@Body() req: any) {
-    const { email, password } = req;
+  @ApiBody({ type: LoginDto })
+  async login(@Body() loginDto: LoginDto) {
+    const { email, password } = loginDto;
     const user = await this.authService.validateUser(email, password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');

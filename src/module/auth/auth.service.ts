@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UsersService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -12,18 +17,37 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<User> {
     const user = await this.usersService.findByEmail(email);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      delete user.password; // Remove the password property
-      return user;
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
-    return null;
+
+    if (user.isBanned) {
+      throw new UnauthorizedException('User is banned');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    delete user.password;
+    return user;
   }
 
-  async createUser(createUserDto: CreateAuthDto): Promise<User> {
-    // Make sure you have a proper User entity and DTO
-    const user = this.usersService.createUser(createUserDto);
+  async createUser(createAuthDto: CreateAuthDto): Promise<User> {
+    const { email } = createAuthDto;
+
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      throw new BadRequestException('User with this email already exists');
+    }
+
+    const user = await this.usersService.createUser(createAuthDto);
+
+    console.log('User saved with role:', user.role);
     return user;
   }
 
@@ -32,13 +56,28 @@ export class AuthService {
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.usersService.findById(id);
+    const user = await this.usersService.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
-  async login(user: any) {
-    const payload = { email: user.email, sub: user.id, role: user.role };
+  async login(user: User) {
+    if (user.isBanned) {
+      throw new UnauthorizedException('User is banned');
+    }
+
+    const payload = {
+      name: user.name,
+      sub: user.id,
+      role: user.role,
+      email: user.email,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
     };
   }
 }
