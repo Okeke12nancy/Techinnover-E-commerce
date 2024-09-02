@@ -41,6 +41,19 @@ cp .env.example .env
 
 ```
 
+# or copy the following environmental variables and paste on your `.env` file"
+
+DB_HOST=
+DB_PORT=
+DB_USERNAME=
+DB_PASSWORD=
+DB_NAME=
+JWT_SECRET=
+JWT_EXPIRATION=
+PORT =
+
+or you can just copy these variables
+
 Open the .env file and update the values with your own configuration.
 
 Running the Application Locally
@@ -55,51 +68,12 @@ yarn start:dev
 
 Access the API:
 
-The application will be running on http://localhost:3000.
+The application will be running on http://localhost:your-port
 
 View API Documentation:
 
-Swagger API documentation can be accessed at http://localhost:3000/api-docs.
-
-API Endpoints
-
-- User Management
-
-POST /auth/register: Register a new user.
-POST /auth/login: Authenticate a user and obtain a JWT token.
-GET /users: List all users (admin only).
-PATCH /users/
-/ban: Ban a user (admin only).
-PATCH /users/
-/unban: Unban a user (admin only).
-
-- Product Management
-  POST /products: Create a new product (authenticated users).
-  GET /products: List all approved products.
-  GET /products/
-  Get a product by ID.
-  PATCH /products/
-  Update a product (authenticated users).
-  DELETE /products/
-  Delete a product (authenticated users).
-  PATCH /products/
-  /approve: Approve a product (admin only).
-  PATCH /products/
-  /disapprove: Disapprove a product (admin only).
-
-- Testing
-  To run the tests, use the following command:
-
-  ```bash
-  npm run test
-  ```
-
-# or
-
-```
-yarn test
-```
+Swagger API documentation can be accessed at http://localhost:your-port/api-docs.
 
 Start your NestJS server.
-Navigate to http://localhost:3000/api-docs in your browser.
+Navigate to http://localhost:your-port/api-docs in your browser.
 You should see the Swagger UI with the documentation for your API, including details on all available endpoints and their request/response schemas.
